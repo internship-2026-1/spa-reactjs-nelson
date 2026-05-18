@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import Home from "../modules/public/home";
 import Login from "../modules/public/login";
+import NotFound from "../modules/public/not-found"
 
 export function AppRouter() {
   return (
@@ -9,7 +10,7 @@ export function AppRouter() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound/>} />
     </Routes>
   );
 }
