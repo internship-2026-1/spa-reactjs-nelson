@@ -1,57 +1,65 @@
-import { createContext, useContext, useMemo, useState } from "react";
-
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { sessionStorageService } from "../../services/index.js";
 
 const AuthContext = createContext(null);
 
+const AUTH_USER_KEY = "auth_user";
 const AUTH_TOKEN_KEY = "jwt";
-const AUTH_USER_KEY = "user";
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const token = sessionStorageService.get(AUTH_TOKEN_KEY, null);
-    const storedUser = sessionStorageService.get(AUTH_USER_KEY, null);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
-    if (!token) {
-      return null;
+  useEffect(() => {
+    const storedUser = sessionStorageService.get(AUTH_USER_KEY, null);
+    const storedToken = sessionStorageService.get(AUTH_TOKEN_KEY, null);
+
+    if (storedUser && storedToken) {
+      setUser(storedUser);
+      setToken(storedToken);
     }
 
-    return storedUser || { token };
-  });
+    setIsAuthReady(true);
+  }, []);
+
+  const login = (jwt, userData) => {
+    sessionStorageService.set(AUTH_TOKEN_KEY, jwt);
+    sessionStorageService.set(AUTH_USER_KEY, userData);
+
+    setToken(jwt);
+    setUser(userData);
+  };
+
+  const logout = () => {
+    sessionStorageService.remove(AUTH_TOKEN_KEY);
+    sessionStorageService.remove(AUTH_USER_KEY);
+
+    setToken(null);
+    setUser(null);
+  };
 
   const value = useMemo(
     () => ({
       user,
-      isAuthenticated: Boolean(user),
-
-      login: (token, userData = null) => {
-        const authenticatedUser = userData || { token };
-
-        sessionStorageService.set(AUTH_TOKEN_KEY, token);
-        sessionStorageService.set(AUTH_USER_KEY, authenticatedUser);
-
-        setUser(authenticatedUser);
-      },
-
-      logout: () => {
-        sessionStorageService.remove(AUTH_TOKEN_KEY);
-        sessionStorageService.remove(AUTH_USER_KEY);
-
-        setUser(null);
-      },
+      token,
+      isAuthenticated: Boolean(user && token),
+      isAuthReady,
+      login,
+      logout,
     }),
-    [user]
+    [user, token, isAuthReady]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
+  const context = useContext(AuthContext);
 
-  if (!ctx) {
+  if (!context) {
     throw new Error("useAuth debe usarse dentro de AuthProvider");
   }
 
-  return ctx;
+  return context;
 }
