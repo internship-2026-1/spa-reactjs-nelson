@@ -1,25 +1,18 @@
 import { Link } from "react-router-dom";
-import { Button } from "lib-components-react";
 
 import { useAuth } from "../../../router/providers/AuthProvider.jsx";
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   return (
-    <main className="min-h-screen bg-slate-100 p-8">
-      <section className="mx-auto max-w-5xl rounded-2xl bg-white p-8 shadow-sm">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-            <p className="mt-2 text-slate-600">
-              Bienvenido, {user?.name || "Usuario"}.
-            </p>
-          </div>
-
-          <Button type="button" variant="secondary" onClick={logout}>
-            Cerrar sesión
-          </Button>
+    <section className="bg-slate-100 p-8">
+      <div className="mx-auto max-w-5xl rounded-2xl bg-white p-8 shadow-sm">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+          <p className="mt-2 text-slate-600">
+            Bienvenido, {user?.name || "Usuario"}.
+          </p>
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -44,7 +37,7 @@ export default function Dashboard() {
             Ir a mi perfil
           </Link>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }

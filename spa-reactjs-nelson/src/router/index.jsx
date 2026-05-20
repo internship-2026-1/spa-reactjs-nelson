@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 
+import { SimpleLayout, MainLayout } from "../layouts";
+
 import Home from "../modules/public/home";
 import Login from "../modules/public/login";
 import NotFound from "../modules/public/not-found";
@@ -12,31 +14,24 @@ import { PrivateRoute } from "./PrivateRoute.jsx";
 export function AppRouter() {
   return (
     <Routes>
-      {/* Rutas públicas */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
+      {/* Rutas públicas sin navbar/footer global */}
+      <Route element={<SimpleLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
 
-      {/* Rutas privadas */}
+      {/* Rutas privadas con navbar + footer */}
       <Route
-        path="/dashboard"
         element={
           <PrivateRoute>
-            <Dashboard />
+            <MainLayout />
           </PrivateRoute>
         }
-      />
-
-      <Route
-        path="/perfil"
-        element={
-          <PrivateRoute>
-            <Perfil />
-          </PrivateRoute>
-        }
-      />
-
-      {/* Ruta pública 404 */}
-      <Route path="*" element={<NotFound />} />
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/perfil" element={<Perfil />} />
+      </Route>
     </Routes>
   );
 }
