@@ -1,24 +1,18 @@
 import { Link } from "react-router-dom";
-import { Button } from "lib-components-react";
+
 import { useAuth } from "../../../router/providers/AuthProvider.jsx";
 
 export default function Perfil() {
-  const { user, token, logout } = useAuth();
+  const { user, token } = useAuth();
 
   return (
-    <main className="min-h-screen bg-slate-100 p-8">
-      <section className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-sm">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Perfil</h1>
-            <p className="mt-2 text-slate-600">
-              Información del usuario autenticado.
-            </p>
-          </div>
-
-          <Button type="button" variant="secondary" onClick={logout}>
-            Cerrar sesión
-          </Button>
+    <section className="bg-slate-100 p-8">
+      <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-sm">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Perfil</h1>
+          <p className="mt-2 text-slate-600">
+            Información del usuario autenticado.
+          </p>
         </div>
 
         <div className="mt-8 space-y-4">
@@ -48,7 +42,7 @@ export default function Perfil() {
             Volver al dashboard
           </Link>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }

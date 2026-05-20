@@ -1,7 +1,9 @@
+// src/layouts/Navbar.jsx
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "lib-components-react";
 
-import { useAuth } from "../../router/providers/AuthProvider.jsx";
+import { useAuth } from "../router/providers/AuthProvider.jsx";
 
 const CartIcon = () => (
   <svg
@@ -105,10 +107,7 @@ export function Navbar() {
               Perfil
             </Link>
 
-            <Link
-              to="/"
-              className={getLinkClass(location.pathname, "/")}
-            >
+            <Link to="/" className={getLinkClass(location.pathname, "/")}>
               Catálogo
             </Link>
           </nav>
@@ -117,6 +116,7 @@ export function Navbar() {
         <div className="flex items-center gap-5">
           <div className="hidden h-9 w-[270px] items-center gap-3 rounded border border-slate-300 bg-white px-4 lg:flex">
             <SearchIcon />
+
             <input
               type="text"
               placeholder="Buscar hardware..."

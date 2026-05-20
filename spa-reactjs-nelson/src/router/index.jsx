@@ -1,8 +1,6 @@
-// src/router/index.jsx
-
 import { Routes, Route } from "react-router-dom";
 
-import { SimpleLayout } from "../layouts/SimpleLayout.jsx";
+import { SimpleLayout, MainLayout } from "../layouts";
 
 import Home from "../modules/public/home";
 import Login from "../modules/public/login";
@@ -23,24 +21,17 @@ export function AppRouter() {
         <Route path="*" element={<NotFound />} />
       </Route>
 
-      {/* Rutas privadas */}
+      {/* Rutas privadas con navbar + footer */}
       <Route
-        path="/dashboard"
         element={
           <PrivateRoute>
-            <Dashboard />
+            <MainLayout />
           </PrivateRoute>
         }
-      />
-
-      <Route
-        path="/perfil"
-        element={
-          <PrivateRoute>
-            <Perfil />
-          </PrivateRoute>
-        }
-      />
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/perfil" element={<Perfil />} />
+      </Route>
     </Routes>
   );
 }
