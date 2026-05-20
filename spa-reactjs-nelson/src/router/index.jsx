@@ -1,4 +1,8 @@
+// src/router/index.jsx
+
 import { Routes, Route } from "react-router-dom";
+
+import { SimpleLayout } from "../layouts/SimpleLayout.jsx";
 
 import Home from "../modules/public/home";
 import Login from "../modules/public/login";
@@ -12,9 +16,12 @@ import { PrivateRoute } from "./PrivateRoute.jsx";
 export function AppRouter() {
   return (
     <Routes>
-      {/* Rutas públicas */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
+      {/* Rutas públicas sin navbar/footer global */}
+      <Route element={<SimpleLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
 
       {/* Rutas privadas */}
       <Route
@@ -34,9 +41,6 @@ export function AppRouter() {
           </PrivateRoute>
         }
       />
-
-      {/* Ruta pública 404 */}
-      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
