@@ -1,133 +1,20 @@
-import { useState } from "react";
+// src/modules/public/home/index.jsx
+
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Button, Card, CardGrid, InfoCard } from "lib-components-react";
+
 import { Navbar, Footer } from "../../../layouts";
 import heroImage from "../../../assets/IngenieriaAlLimite.png";
-import coreI9Image from "../../../assets/corei9.jpg";
-import rtx4080Image from "../../../assets/rtx4080.jpg";
-import ddr5Image from "../../../assets/32GBDDR5.jpg";
-import z790Image from "../../../assets/z790.jpg";
-import mouseImage from "../../../assets/mousePrecision.jpg";
-import ssdImage from "../../../assets/2TBGen5.jpg";
-import hydroImage from "../../../assets/HydroElite.jpg";
-import powerImage from "../../../assets/1200WTitanium.jpg";
 
-const categories = [
-  "Todos",
-  "Tarjetas Gráficas",
-  "Procesadores",
-  "Placas Base",
-  "Memoria RAM",
-];
+import {
+  fetchProducts,
+  selectProducts,
+  selectProductsError,
+  selectProductsLoading,
+} from "../../../store/slices/productsSlice.js";
 
-const products = [
-  {
-    id: 1,
-    name: "Core i9-14900K",
-    category: "Procesadores",
-    label: "PROCESADOR",
-    badge: "EN STOCK",
-    image: coreI9Image,
-    price: "589,00€",
-    specs: [
-      ["Núcleos", "24 Núcleos"],
-      ["Frecuencia", "6.0 GHz Turbo"],
-      ["TDP", "125W"],
-    ],
-  },
-  {
-    id: 2,
-    name: "RTX 4080 Super",
-    category: "Tarjetas Gráficas",
-    label: "TARJETA GRÁFICA",
-    badge: "OFERTA",
-    image: rtx4080Image,
-    oldPrice: "1.199,00€",
-    price: "1.049,00€",
-    specs: [
-      ["Memoria", "16GB GDDR6X"],
-      ["DLSS", "DLSS 3.5 Ready"],
-      ["Puerto", "PCIe 4.0"],
-    ],
-  },
-  {
-    id: 3,
-    name: "32GB DDR5 6400MHz",
-    category: "Memoria RAM",
-    label: "MEMORIA RAM",
-    image: ddr5Image,
-    price: "145,00€",
-    specs: [
-      ["Kit", "2 x 16GB"],
-      ["Latencia", "CL32"],
-      ["Voltaje", "1.4V"],
-    ],
-  },
-  {
-    id: 4,
-    name: "Z790 Master X",
-    category: "Placas Base",
-    label: "PLACA BASE",
-    image: z790Image,
-    price: "620,00€",
-    specs: [
-      ["Socket", "LGA 1700"],
-      ["Factor", "E-ATX"],
-      ["Red", "Wi-Fi 7 / 10GbE"],
-    ],
-  },
-  {
-    id: 5,
-    name: "Mouse Precision X1",
-    category: "Periférico",
-    label: "PERIFÉRICO",
-    image: mouseImage,
-    price: "129,00€",
-    specs: [
-      ["DPI", "32,000 DPI"],
-      ["Conexión", "Wireless 2.4GHz"],
-      ["Peso", "58g"],
-    ],
-  },
-  {
-    id: 6,
-    name: "2TB Gen5 SSD",
-    category: "Almacenamiento",
-    label: "ALMACENAMIENTO",
-    image: ssdImage,
-    price: "299,00€",
-    specs: [
-      ["Lectura", "12,400 MB/s"],
-      ["Escritura", "11,800 MB/s"],
-      ["Formato", "M.2 2280"],
-    ],
-  },
-  {
-    id: 7,
-    name: "Hydro Elite 360",
-    category: "Refrigeración",
-    label: "REFRIGERACIÓN",
-    image: hydroImage,
-    price: "189,00€",
-    specs: [
-      ["Radiador", "360mm Aluminium"],
-      ["Pantalla", '2.1" LCD Pump'],
-      ["Ventiladores", "3x 120mm PWM"],
-    ],
-  },
-  {
-    id: 8,
-    name: "1200W Titanium",
-    category: "Fuente de Alimentación",
-    label: "FUENTE DE ALIMENTACIÓN",
-    image: powerImage,
-    price: "345,00€",
-    specs: [
-      ["Eficiencia", "80+ Titanium"],
-      ["Cables", "Totalmente Modular"],
-      ["Garantía", "10 Años"],
-    ],
-  },
-];
+const defaultCategories = ["Todos"];
 
 const ShieldIcon = () => (
   <svg
@@ -138,6 +25,7 @@ const ShieldIcon = () => (
     strokeWidth="2.2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     <path d="m9 12 2 2 4-4" />
@@ -153,6 +41,7 @@ const SpeedIcon = () => (
     strokeWidth="2.2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M21 12a9 9 0 0 0-18 0" />
     <path d="M12 12 17 7" />
@@ -171,6 +60,7 @@ const SupportIcon = () => (
     strokeWidth="2.2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M4 13a8 8 0 0 1 16 0" />
     <path d="M18 19a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-1v7z" />
@@ -189,6 +79,7 @@ const CartIcon = ({ className = "h-5 w-5" }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <circle cx="9" cy="21" r="1" />
     <circle cx="20" cy="21" r="1" />
@@ -196,24 +87,60 @@ const CartIcon = ({ className = "h-5 w-5" }) => (
   </svg>
 );
 
+function formatCurrency(value) {
+  return new Intl.NumberFormat("es-GT", {
+    style: "currency",
+    currency: "GTQ",
+  }).format(Number(value || 0));
+}
+
+function getProductSpecs(product) {
+  return [
+    ["Referencia", product.reference || "SIN-REF"],
+    ["Stock", `${product.stock || 0} unidades`],
+    ["Categoría", product.category || "Sin categoría"],
+  ];
+}
+
+function getProductBadge(product) {
+  if (Number(product.stock || 0) <= 0) {
+    return "AGOTADO";
+  }
+
+  return "EN STOCK";
+}
+
+function ProductImagePlaceholder() {
+  return (
+    <div className="flex h-[190px] w-full items-center justify-center bg-slate-200">
+      <span className="text-3xl font-extrabold tracking-[-0.08em] text-slate-400">
+        TECHSPEC
+      </span>
+    </div>
+  );
+}
 
 function ProductCard({ product }) {
+  const specs = getProductSpecs(product);
+  const badge = getProductBadge(product);
+  const price = formatCurrency(product.price);
+  const isOutOfStock = Number(product.stock || 0) <= 0;
+
   const footer = (
     <div className="flex w-full items-end justify-between">
       <div>
-        {product.oldPrice && (
-          <p className="text-sm text-slate-400 line-through">
-            {product.oldPrice}
-          </p>
-        )}
-        <p className="text-lg font-medium text-slate-950">{product.price}</p>
+        <p className="text-lg font-medium text-slate-950">{price}</p>
+        <p className="mt-1 text-xs text-slate-400">
+          {product.reference || "Sin referencia"}
+        </p>
       </div>
 
       <Button
         type="button"
         variant="primary"
+        disabled={isOutOfStock}
         aria-label={`Agregar ${product.name} al carrito`}
-        className="!h-10 !w-10 !rounded !p-0"
+        className="!h-10 !w-10 !rounded !p-0 disabled:!cursor-not-allowed disabled:!opacity-50"
       >
         <CartIcon className="h-5 w-5" />
       </Button>
@@ -222,28 +149,40 @@ function ProductCard({ product }) {
 
   return (
     <Card
-      image={product.image}
+      image={product.image || undefined}
       imageAlt={product.name}
-      badge={product.badge}
+      badge={badge}
       footer={footer}
       className="!flex !min-h-[420px] !flex-col !overflow-hidden !rounded-lg !border !border-slate-300 !bg-white"
     >
+      {!product.image && (
+        <div className="-mx-6 -mt-6 mb-5">
+          <ProductImagePlaceholder />
+        </div>
+      )}
+
       <p className="text-[11px] font-extrabold uppercase text-blue-600">
-        {product.label}
+        {product.category || "PRODUCTO"}
       </p>
 
       <h3 className="mt-2 min-h-[64px] text-[27px] font-medium leading-[1.08] tracking-[-0.04em] text-slate-950">
         {product.name}
       </h3>
 
+      <p className="mb-3 mt-1 line-clamp-2 min-h-[40px] text-sm leading-relaxed text-slate-500">
+        {product.description || "Producto disponible en catálogo TECHSPEC."}
+      </p>
+
       <div className="mt-2 space-y-0">
-        {product.specs.map(([label, value]) => (
+        {specs.map(([label, value]) => (
           <div
             key={`${product.id}-${label}`}
             className="flex items-center justify-between border-b border-slate-200 py-1 text-[12px]"
           >
             <span className="text-slate-500">{label}</span>
-            <span className="font-bold text-slate-950">{value}</span>
+            <span className="max-w-[145px] truncate text-right font-bold text-slate-950">
+              {value}
+            </span>
           </div>
         ))}
       </div>
@@ -252,12 +191,35 @@ function ProductCard({ product }) {
 }
 
 export default function Home() {
+  const dispatch = useDispatch();
+
+  const backendProducts = useSelector(selectProducts);
+  const productsLoading = useSelector(selectProductsLoading);
+  const productsError = useSelector(selectProductsError);
+
   const [selectedCategory, setSelectedCategory] = useState("Todos");
 
-  const filteredProducts =
-    selectedCategory === "Todos"
-      ? products
-      : products.filter((product) => product.category === selectedCategory);
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
+
+  const categories = useMemo(() => {
+    const backendCategories = backendProducts
+      .map((product) => product.category)
+      .filter(Boolean);
+
+    return [...defaultCategories, ...new Set(backendCategories)];
+  }, [backendProducts]);
+
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === "Todos") {
+      return backendProducts;
+    }
+
+    return backendProducts.filter(
+      (product) => product.category === selectedCategory
+    );
+  }, [backendProducts, selectedCategory]);
 
   return (
     <main className="min-h-screen bg-[#f4f7fb] text-slate-950">
@@ -334,15 +296,35 @@ export default function Home() {
           </div>
         </div>
 
-        <CardGrid
-          columns={4}
-          gap={24}
-          className="!grid !grid-cols-1 sm:!grid-cols-2 lg:!grid-cols-4"
-        >
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </CardGrid>
+        {productsError && (
+          <div className="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+            {productsError}
+          </div>
+        )}
+
+        {productsLoading && (
+          <div className="mb-6 rounded border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
+            Cargando productos...
+          </div>
+        )}
+
+        {!productsLoading && !productsError && filteredProducts.length === 0 && (
+          <div className="rounded border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+            No hay productos disponibles para esta categoría.
+          </div>
+        )}
+
+        {filteredProducts.length > 0 && (
+          <CardGrid
+            columns={4}
+            gap={24}
+            className="!grid !grid-cols-1 sm:!grid-cols-2 lg:!grid-cols-4"
+          >
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </CardGrid>
+        )}
       </section>
 
       <section className="mx-auto max-w-[1110px] px-6 py-14">
@@ -350,6 +332,7 @@ export default function Home() {
           <h2 className="text-[36px] font-extrabold leading-none tracking-[-0.05em] text-slate-950">
             Excelencia Técnica
           </h2>
+
           <p className="mt-2 text-base text-slate-600">
             ¿Por qué los profesionales eligen TECHSPEC?
           </p>

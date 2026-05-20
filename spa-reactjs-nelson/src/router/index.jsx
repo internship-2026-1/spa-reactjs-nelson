@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-
+import Products from "../modules/private/products";
 import { SimpleLayout, MainLayout } from "../layouts";
 
 import Home from "../modules/public/home";
@@ -30,6 +30,7 @@ export function AppRouter() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/productos" element={<Products />} />
       </Route>
     </Routes>
   );
