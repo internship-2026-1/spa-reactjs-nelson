@@ -105,7 +105,7 @@ export default function Login() {
   return (
   <main className="login-page">
     <section className="login-hero">
-      <div className="login-brand">TECHSPEC</div>
+      <div className="login-brand"><Link to="/">TECHSPEC</Link></div>
 
       <div className="login-hero-content">
         <h1 className="login-hero-title">
