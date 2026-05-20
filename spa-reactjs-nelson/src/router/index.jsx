@@ -14,14 +14,13 @@ import { PrivateRoute } from "./PrivateRoute.jsx";
 export function AppRouter() {
   return (
     <Routes>
-      {/* Rutas públicas sin navbar/footer global */}
       <Route element={<SimpleLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="*" element={<NotFound />} />
       </Route>
 
-      {/* Rutas privadas con navbar + footer */}
+
       <Route
         element={
           <PrivateRoute>

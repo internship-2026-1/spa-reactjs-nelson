@@ -52,6 +52,23 @@ const SearchIcon = () => (
   </svg>
 );
 
+const LogoutIcon = () => (
+  <svg
+    className="h-4 w-4"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="M16 17l5-5-5-5" />
+    <path d="M21 12H9" />
+  </svg>
+);
+
 function getLinkClass(pathname, targetPath) {
   const isActive =
     pathname === targetPath ||
@@ -69,7 +86,7 @@ function getLinkClass(pathname, targetPath) {
 export function Navbar({ showSearch = false }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleProfileClick = () => {
     if (user) {
@@ -78,6 +95,11 @@ export function Navbar({ showSearch = false }) {
     }
 
     navigate("/login");
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -118,7 +140,7 @@ export function Navbar({ showSearch = false }) {
           </nav>
         </div>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4">
           {showSearch && (
             <div className="hidden h-9 w-[270px] items-center gap-3 rounded border border-slate-300 bg-white px-4 lg:flex">
               <SearchIcon />
@@ -131,22 +153,26 @@ export function Navbar({ showSearch = false }) {
             </div>
           )}
 
-          <button
+          <Button
             type="button"
-            className="text-slate-700 transition hover:text-blue-600"
+            variant="secondary"
             aria-label="Carrito"
+            className="!flex !h-9 !w-9 !items-center !justify-center !rounded !border-0 !bg-transparent !p-0 !text-slate-700 hover:!bg-transparent hover:!text-blue-600"
           >
             <CartIcon />
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={handleProfileClick}
-            className={[
-              "inline-flex h-9 items-center gap-2 rounded border border-slate-200 px-3 text-slate-700 transition hover:text-blue-600",
-              user ? "bg-white" : "border-transparent bg-transparent",
-            ].join(" ")}
             aria-label={user ? "Perfil de usuario" : "Iniciar sesión"}
+            className={[
+              "!inline-flex !h-9 !items-center !gap-2 !rounded !px-3 !text-slate-700 hover:!text-blue-600",
+              user
+                ? "!border !border-slate-200 !bg-white"
+                : "!border-0 !bg-transparent !p-0 hover:!bg-transparent",
+            ].join(" ")}
           >
             <UserIcon />
 
@@ -155,7 +181,19 @@ export function Navbar({ showSearch = false }) {
                 Admin
               </span>
             )}
-          </button>
+          </Button>
+
+          {user && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleLogout}
+              className="!inline-flex !h-9 !items-center !gap-2 !rounded !border !border-slate-300 !bg-white !px-4 !text-xs !font-bold !normal-case !text-slate-700 hover:!text-blue-600"
+            >
+              <LogoutIcon />
+              <span className="hidden lg:inline">Cerrar sesión</span>
+            </Button>
+          )}
         </div>
       </div>
     </header>
