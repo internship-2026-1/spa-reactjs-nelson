@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Button, Card, CardGrid, InfoCard, Input } from "lib-components-react";
-
+import { Button, Card, CardGrid, InfoCard } from "lib-components-react";
+import { Navbar, Footer } from "../../../layouts";
 import heroImage from "../../../assets/IngenieriaAlLimite.png";
 import coreI9Image from "../../../assets/corei9.jpg";
 import rtx4080Image from "../../../assets/rtx4080.jpg";
@@ -197,35 +196,6 @@ const CartIcon = ({ className = "h-5 w-5" }) => (
   </svg>
 );
 
-const UserIcon = () => (
-  <svg
-    className="h-5 w-5"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M20 21a8 8 0 0 0-16 0" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-const SearchIcon = () => (
-  <svg
-    className="h-4 w-4 text-slate-400"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="11" cy="11" r="8" />
-    <path d="m21 21-4.35-4.35" />
-  </svg>
-);
 
 function ProductCard({ product }) {
   const footer = (
@@ -281,55 +251,6 @@ function ProductCard({ product }) {
   );
 }
 
-function Footer() {
-  return (
-    <footer className="border-t border-slate-200 bg-[#f4f7fb]">
-      <div className="mx-auto grid max-w-[1110px] gap-10 px-6 py-14 md:grid-cols-4">
-        <div>
-          <h2 className="text-xl font-extrabold tracking-[-0.04em] text-slate-950">
-            TECHSPEC
-          </h2>
-          <p className="mt-5 max-w-[230px] text-xs font-semibold uppercase leading-relaxed tracking-[0.12em] text-slate-400">
-            © 2024 TECHSPEC. ENGINEERED FOR PERFORMANCE.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-xs font-extrabold uppercase tracking-[0.16em] text-blue-600">
-            Productos
-          </h3>
-          <nav className="mt-5 flex flex-col gap-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
-            <Link to="/">Componentes</Link>
-            <Link to="/">Sistemas Pre-Built</Link>
-            <Link to="/">Technical Specs</Link>
-          </nav>
-        </div>
-
-        <div>
-          <h3 className="text-xs font-extrabold uppercase tracking-[0.16em] text-blue-600">
-            Soporte
-          </h3>
-          <nav className="mt-5 flex flex-col gap-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
-            <Link to="/">Support</Link>
-            <Link to="/">Returns</Link>
-            <Link to="/">Shipping</Link>
-          </nav>
-        </div>
-
-        <div>
-          <h3 className="text-xs font-extrabold uppercase tracking-[0.16em] text-blue-600">
-            Legal
-          </h3>
-          <nav className="mt-5 flex flex-col gap-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
-            <Link to="/">Privacy Policy</Link>
-            <Link to="/">Terms of Service</Link>
-          </nav>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
 
@@ -340,67 +261,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#f4f7fb] text-slate-950">
-      <header className="border-b border-slate-200 bg-[#f4f7fb]">
-        <div className="mx-auto flex h-[58px] max-w-[1110px] items-center justify-between px-6">
-          <div className="flex h-full items-center gap-12">
-            <Link
-              to="/"
-              className="text-2xl font-extrabold tracking-[-0.05em] text-slate-950"
-            >
-              TECHSPEC
-            </Link>
-
-            <nav className="hidden h-full items-center gap-9 text-sm text-slate-600 md:flex">
-              <Link
-                to="/"
-                className="flex h-full items-center border-b-2 border-transparent hover:text-blue-600"
-              >
-                Sistemas
-              </Link>
-              <Link
-                to="/"
-                className="flex h-full items-center border-b-2 border-blue-600 font-bold text-blue-600"
-              >
-                Componentes
-              </Link>
-              <Link
-                to="/"
-                className="flex h-full items-center border-b-2 border-transparent hover:text-blue-600"
-              >
-                Promociones
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-5">
-            <div className="hidden h-9 w-[270px] items-center gap-3 rounded border border-slate-300 bg-white px-4 md:flex">
-              <SearchIcon />
-
-              <Input
-                type="text"
-                placeholder="Buscar hardware..."
-                className="!h-auto !w-full !border-0 !bg-transparent !p-0 !text-xs !text-slate-600 !outline-none placeholder:!text-slate-400"
-              />
-            </div>
-
-            <button
-              type="button"
-              className="text-slate-700 transition hover:text-blue-600"
-              aria-label="Carrito"
-            >
-              <CartIcon />
-            </button>
-
-            <Link
-              to="/perfil"
-              className="text-slate-700 transition hover:text-blue-600"
-              aria-label="Perfil"
-            >
-              <UserIcon />
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Navbar showSearch />
 
       <section className="mx-auto max-w-[1110px] px-6 py-8">
         <div className="grid overflow-hidden rounded-lg border border-slate-300 bg-[#e5e9ee] md:grid-cols-[1.25fr_1fr]">

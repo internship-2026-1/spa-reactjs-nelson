@@ -1,7 +1,5 @@
-// src/layouts/Navbar.jsx
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "lib-components-react";
+import { Button, Input } from "lib-components-react";
 
 import { useAuth } from "../router/providers/AuthProvider.jsx";
 
@@ -55,7 +53,10 @@ const SearchIcon = () => (
 );
 
 function getLinkClass(pathname, targetPath) {
-  const isActive = pathname === targetPath;
+  const isActive =
+    pathname === targetPath ||
+    (targetPath === "/dashboard" && pathname.startsWith("/dashboard")) ||
+    (targetPath === "/perfil" && pathname.startsWith("/perfil"));
 
   return [
     "flex h-full items-center border-b-2 px-1 text-sm transition",
@@ -65,14 +66,18 @@ function getLinkClass(pathname, targetPath) {
   ].join(" ");
 }
 
-export function Navbar() {
+export function Navbar({ showSearch = false }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
+  const handleProfileClick = () => {
+    if (user) {
+      navigate("/perfil");
+      return;
+    }
+
+    navigate("/login");
   };
 
   return (
@@ -83,46 +88,48 @@ export function Navbar() {
       <div className="mx-auto flex h-[58px] max-w-[1110px] items-center justify-between px-6">
         <div className="flex h-full items-center gap-12">
           <Link
-            to="/dashboard"
+            to="/"
             className="text-2xl font-extrabold tracking-[-0.05em] text-slate-950"
           >
             TECHSPEC
           </Link>
 
           <nav
-            aria-label="Navegación principal de la aplicación"
+            aria-label="Navegación principal"
             className="hidden h-full items-center gap-9 md:flex"
           >
             <Link
               to="/dashboard"
               className={getLinkClass(location.pathname, "/dashboard")}
             >
-              Dashboard
-            </Link>
-
-            <Link
-              to="/perfil"
-              className={getLinkClass(location.pathname, "/perfil")}
-            >
-              Perfil
+              Sistemas
             </Link>
 
             <Link to="/" className={getLinkClass(location.pathname, "/")}>
-              Catálogo
+              Componentes
+            </Link>
+
+            <Link
+              to="/promociones"
+              className={getLinkClass(location.pathname, "/promociones")}
+            >
+              Promociones
             </Link>
           </nav>
         </div>
 
         <div className="flex items-center gap-5">
-          <div className="hidden h-9 w-[270px] items-center gap-3 rounded border border-slate-300 bg-white px-4 lg:flex">
-            <SearchIcon />
+          {showSearch && (
+            <div className="hidden h-9 w-[270px] items-center gap-3 rounded border border-slate-300 bg-white px-4 lg:flex">
+              <SearchIcon />
 
-            <input
-              type="text"
-              placeholder="Buscar hardware..."
-              className="w-full bg-transparent text-xs text-slate-600 outline-none placeholder:text-slate-400"
-            />
-          </div>
+              <Input
+                type="text"
+                placeholder="Buscar hardware..."
+                className="!h-auto !w-full !border-0 !bg-transparent !p-0 !text-xs !text-slate-600 !outline-none placeholder:!text-slate-400"
+              />
+            </div>
+          )}
 
           <button
             type="button"
@@ -132,23 +139,23 @@ export function Navbar() {
             <CartIcon />
           </button>
 
-          <Link
-            to="/perfil"
-            className="text-slate-700 transition hover:text-blue-600"
-            aria-label="Perfil"
-            title={user?.email || "Perfil"}
+          <button
+            type="button"
+            onClick={handleProfileClick}
+            className={[
+              "inline-flex h-9 items-center gap-2 rounded border border-slate-200 px-3 text-slate-700 transition hover:text-blue-600",
+              user ? "bg-white" : "border-transparent bg-transparent",
+            ].join(" ")}
+            aria-label={user ? "Perfil de usuario" : "Iniciar sesión"}
           >
             <UserIcon />
-          </Link>
 
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleLogout}
-            className="!hidden !h-9 !rounded !px-4 !text-xs !font-bold !normal-case md:!inline-flex"
-          >
-            Salir
-          </Button>
+            {user && (
+              <span className="hidden text-sm font-medium text-slate-700 sm:inline">
+                Admin
+              </span>
+            )}
+          </button>
         </div>
       </div>
     </header>
