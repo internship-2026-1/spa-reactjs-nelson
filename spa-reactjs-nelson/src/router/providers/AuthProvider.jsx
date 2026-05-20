@@ -1,55 +1,45 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-import { sessionStorageService } from "../../services/index.js";
+import {
+  logoutSession,
+  selectAuth,
+  setSession,
+} from "../../store/slices/authSlice.js";
 
 const AuthContext = createContext(null);
 
-const AUTH_USER_KEY = "auth_user";
-const AUTH_TOKEN_KEY = "jwt";
-
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const dispatch = useDispatch();
+  const auth = useSelector(selectAuth);
 
-  useEffect(() => {
-    const storedUser = sessionStorageService.get(AUTH_USER_KEY, null);
-    const storedToken = sessionStorageService.get(AUTH_TOKEN_KEY, null);
-
-    if (storedUser && storedToken) {
-      setUser(storedUser);
-      setToken(storedToken);
-    }
-
-    setIsAuthReady(true);
-  }, []);
-
-  const login = (jwt, userData) => {
-    sessionStorageService.set(AUTH_TOKEN_KEY, jwt);
-    sessionStorageService.set(AUTH_USER_KEY, userData);
-
-    setToken(jwt);
-    setUser(userData);
+  const login = (accessToken, userData, refreshToken = null) => {
+    dispatch(
+      setSession({
+        accessToken,
+        refreshToken,
+        user: userData,
+      })
+    );
   };
 
   const logout = () => {
-    sessionStorageService.remove(AUTH_TOKEN_KEY);
-    sessionStorageService.remove(AUTH_USER_KEY);
-
-    setToken(null);
-    setUser(null);
+    dispatch(logoutSession());
   };
 
   const value = useMemo(
     () => ({
-      user,
-      token,
-      isAuthReady,
-      isAuthenticated: Boolean(user && token),
+      user: auth.user,
+      token: auth.accessToken,
+      refreshToken: auth.refreshToken,
+      isAuthenticated: auth.isAuthenticated,
+      isAuthReady: auth.isAuthReady,
+      loading: auth.loading,
+      error: auth.error,
       login,
       logout,
     }),
-    [user, token, isAuthReady]
+    [auth]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

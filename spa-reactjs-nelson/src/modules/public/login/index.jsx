@@ -1,5 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button, FormField, Input } from "lib-components-react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  clearAuthError,
+  loginUser,
+  selectAuthError,
+  selectAuthLoading,
+} from "../../../store/slices/authSlice.js";
 
 import { useAuth } from "../../../router/providers/AuthProvider.jsx";
 import "./login.css";
@@ -72,208 +79,219 @@ const TerminalIcon = () => (
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const dispatch = useDispatch();
 
-  const handleLogin = (event) => {
-  event.preventDefault();
+  const loading = useSelector(selectAuthLoading);
+  const authError = useSelector(selectAuthError);
 
-  const formData = new FormData(event.currentTarget);
+  const from = location.state?.from?.pathname || "/dashboard";
 
-  const email = formData.get("email");
-  const password = formData.get("password");
+  const handleLogin = async (event) => {
+    event.preventDefault();
 
-  const isValidMockUser =
-    email === "admin@techspec.com" && password === "admin";
+    const formData = new FormData(event.currentTarget);
 
-  if (!isValidMockUser) {
-    alert("Credenciales inválidas. Usa admin@techspec.com / admin");
-    return;
-  }
+    const email = String(formData.get("email") || "").trim();
+    const password = String(formData.get("password") || "");
 
-  const fakeToken = "fake-jwt-token";
+    dispatch(clearAuthError());
 
-  login(fakeToken, {
-    id: 1,
-    name: "Administrador Techspec",
-    email: "admin@techspec.com",
-    role: "admin",
-  });
+    try {
+      await dispatch(
+        loginUser({
+          email,
+          password,
+        }),
+      ).unwrap();
 
-  navigate("/dashboard");
-};
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+    }
+  };
 
   return (
-  <main className="login-page">
-    <section className="login-hero">
-      <div className="login-brand"><Link to="/">TECHSPEC</Link></div>
+    <main className="login-page">
+      <section className="login-hero">
+        <div className="login-brand">
+          <Link to="/">TECHSPEC</Link>
+        </div>
 
-      <div className="login-hero-content">
-        <h1 className="login-hero-title">
-          Ingeniería para el
-          <br />
-          rendimiento extremo.
-        </h1>
+        <div className="login-hero-content">
+          <h1 className="login-hero-title">
+            Ingeniería para el
+            <br />
+            rendimiento extremo.
+          </h1>
 
-        <p className="login-hero-text">
-          Accede a tu panel de configuración técnica y gestiona tus
-          componentes con precisión quirúrgica.
-        </p>
-      </div>
-
-      <div className="login-hero-meta">
-        <span>© TECHNICAL</span>
-        <span>SLK-11 SECURITY</span>
-      </div>
-    </section>
-
-    <section className="login-panel">
-      <div className="login-form-wrapper">
-        <div className="login-card">
-          <h1 className="login-title">Iniciar Sesión</h1>
-
-          <p className="login-subtitle">
-            Introduce tus credenciales para acceder a tu cuenta profesional.
+          <p className="login-hero-text">
+            Accede a tu panel de configuración técnica y gestiona tus
+            componentes con precisión quirúrgica.
           </p>
+        </div>
 
-          <form className="login-form" onSubmit={handleLogin}>
-            <FormField label="Correo Electrónico" name="email">
-              <div className="login-input-wrapper">
-                <span className="login-input-icon">
-                  <MailIcon />
-                </span>
+        <div className="login-hero-meta">
+          <span>© TECHNICAL</span>
+          <span>SLK-11 SECURITY</span>
+        </div>
+      </section>
 
-                <Input
-                  className="login-input"
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="nombre@techspec.com"
-                  autoComplete="email"
-                />
+      <section className="login-panel">
+        <div className="login-form-wrapper">
+          <div className="login-card">
+            <h1 className="login-title">Iniciar Sesión</h1>
+
+            <p className="login-subtitle">
+              Introduce tus credenciales para acceder a tu cuenta profesional.
+            </p>
+
+            {authError && (
+              <div className="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                {authError}
               </div>
-            </FormField>
+            )}
 
-            <FormField
-              name="password"
-              label={
-                <div className="login-field-row">
-                  <span>Contraseña</span>
-                  <Link className="login-forgot-link" to="/forgot-password">
-                    ¿Olvidaste tu contraseña?
-                  </Link>
+            <form className="login-form" onSubmit={handleLogin}>
+              <FormField label="Correo Electrónico" name="email">
+                <div className="login-input-wrapper">
+                  <span className="login-input-icon">
+                    <MailIcon />
+                  </span>
+
+                  <Input
+                    className="login-input"
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="nombre@techspec.com"
+                    autoComplete="email"
+                  />
                 </div>
-              }
-            >
-              <div className="login-input-wrapper">
-                <span className="login-input-icon">
-                  <LockIcon />
+              </FormField>
+
+              <FormField
+                name="password"
+                label={
+                  <div className="login-field-row">
+                    <span>Contraseña</span>
+                    <Link className="login-forgot-link" to="/forgot-password">
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+                }
+              >
+                <div className="login-input-wrapper">
+                  <span className="login-input-icon">
+                    <LockIcon />
+                  </span>
+
+                  <Input
+                    className="login-input"
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                  />
+                </div>
+              </FormField>
+
+              <label className="login-remember-row">
+                <input className="login-checkbox" type="checkbox" />
+                <span>Mantener sesión iniciada</span>
+              </label>
+
+              <Button
+                type="submit"
+                size="full"
+                variant="primary"
+                disabled={loading}
+                className="login-submit-button"
+              >
+                <span className="login-submit-content">
+                  {loading ? "Validando..." : "Entrar al Sistema"}
+                  {!loading && <ArrowRightIcon />}
                 </span>
+              </Button>
+            </form>
 
-                <Input
-                  className="login-input"
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                />
-              </div>
-            </FormField>
+            <div className="login-divider">O continuar con</div>
 
-            <label className="login-remember-row">
-              <input className="login-checkbox" type="checkbox" />
-              <span>Mantener sesión iniciada</span>
-            </label>
-
-            <Button
-              type="submit"
-              size="full"
-              variant="primary"
-              className="login-submit-button"
-            >
-              <span className="login-submit-content">
-                Entrar al Sistema
-                <ArrowRightIcon />
-              </span>
-            </Button>
-          </form>
-
-          <div className="login-divider">O continuar con</div>
-
-          <div className="login-social-row">
-            <Button
-              type="button"
-              size="full"
-              variant="secondary"
-              className="login-social-button"
-            >
-              <span className="login-social-content">
-                <span className="login-google-icon">
-                  <span>G</span>
-                  <span>o</span>
-                  <span>o</span>
+            <div className="login-social-row">
+              <Button
+                type="button"
+                size="full"
+                variant="secondary"
+                className="login-social-button"
+              >
+                <span className="login-social-content">
+                  <span className="login-google-icon">
+                    <span>G</span>
+                    <span>o</span>
+                    <span>o</span>
+                  </span>
+                  Google
                 </span>
-                Google
-              </span>
-            </Button>
+              </Button>
 
-            <Button
-              type="button"
-              size="full"
-              variant="secondary"
-              className="login-social-button"
-            >
-              <span className="login-social-content">
-                <span className="login-ssh-icon">
-                  <TerminalIcon />
+              <Button
+                type="button"
+                size="full"
+                variant="secondary"
+                className="login-social-button"
+              >
+                <span className="login-social-content">
+                  <span className="login-ssh-icon">
+                    <TerminalIcon />
+                  </span>
+                  SSH Key
                 </span>
-                SSH Key
-              </span>
-            </Button>
+              </Button>
+            </div>
+
+            <p className="login-register-text">
+              ¿No tienes una cuenta?{" "}
+              <Link className="login-request-link" to="/register">
+                Solicitar acceso
+              </Link>
+            </p>
           </div>
+        </div>
+      </section>
 
-          <p className="login-register-text">
-            ¿No tienes una cuenta?{" "}
-            <Link className="login-request-link" to="/register">
-              Solicitar acceso
+      <footer className="login-footer">
+        <div>
+          <div className="login-footer-brand">TECHSPEC</div>
+          <div className="login-footer-copy">
+            © 2024 TECHSPEC. ENGINEERED FOR PERFORMANCE.
+          </div>
+        </div>
+
+        <div>
+          <div className="login-footer-title">Legal</div>
+          <div className="login-footer-list">
+            <Link className="login-footer-link" to="/privacy">
+              Privacy Policy
             </Link>
-          </p>
+            <Link className="login-footer-link" to="/terms">
+              Terms of Service
+            </Link>
+          </div>
         </div>
-      </div>
-    </section>
 
-    <footer className="login-footer">
-      <div>
-        <div className="login-footer-brand">TECHSPEC</div>
-        <div className="login-footer-copy">
-          © 2024 TECHSPEC. ENGINEERED FOR PERFORMANCE.
+        <div>
+          <div className="login-footer-title">Soporte</div>
+          <div className="login-footer-list">
+            <Link className="login-footer-link" to="/technical-specs">
+              Technical Specs
+            </Link>
+            <Link className="login-footer-link" to="/support">
+              Support
+            </Link>
+          </div>
         </div>
-      </div>
-
-      <div>
-        <div className="login-footer-title">Legal</div>
-        <div className="login-footer-list">
-          <Link className="login-footer-link" to="/privacy">
-            Privacy Policy
-          </Link>
-          <Link className="login-footer-link" to="/terms">
-            Terms of Service
-          </Link>
-        </div>
-      </div>
-
-      <div>
-        <div className="login-footer-title">Soporte</div>
-        <div className="login-footer-list">
-          <Link className="login-footer-link" to="/technical-specs">
-            Technical Specs
-          </Link>
-          <Link className="login-footer-link" to="/support">
-            Support
-          </Link>
-        </div>
-      </div>
-    </footer>
-  </main>
-);
+      </footer>
+    </main>
+  );
 }
