@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+
 import { sessionStorageService } from "../../services/index.js";
 
 const AuthContext = createContext(null);
@@ -43,8 +44,8 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       token,
-      isAuthenticated: Boolean(user && token),
       isAuthReady,
+      isAuthenticated: Boolean(user && token),
       login,
       logout,
     }),
