@@ -1,8 +1,7 @@
-// src/modules/public/home/index.jsx
-
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Card, CardGrid, InfoCard } from "lib-components-react";
+import { addItem } from "../../../store/slices/cartSlice.js";
 
 import { Navbar, Footer } from "../../../layouts";
 import heroImage from "../../../assets/IngenieriaAlLimite.png";
@@ -125,6 +124,7 @@ function ProductCard({ product }) {
   const badge = getProductBadge(product);
   const price = formatCurrency(product.price);
   const isOutOfStock = Number(product.stock || 0) <= 0;
+  const dispatch = useDispatch();
 
   const footer = (
     <div className="flex w-full items-end justify-between">
@@ -139,6 +139,7 @@ function ProductCard({ product }) {
         type="button"
         variant="primary"
         disabled={isOutOfStock}
+        onClick={() => dispatch(addItem(product))}
         aria-label={`Agregar ${product.name} al carrito`}
         className="!h-10 !w-10 !rounded !p-0 disabled:!cursor-not-allowed disabled:!opacity-50"
       >
@@ -217,7 +218,7 @@ export default function Home() {
     }
 
     return backendProducts.filter(
-      (product) => product.category === selectedCategory
+      (product) => product.category === selectedCategory,
     );
   }, [backendProducts, selectedCategory]);
 
@@ -308,11 +309,13 @@ export default function Home() {
           </div>
         )}
 
-        {!productsLoading && !productsError && filteredProducts.length === 0 && (
-          <div className="rounded border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
-            No hay productos disponibles para esta categoría.
-          </div>
-        )}
+        {!productsLoading &&
+          !productsError &&
+          filteredProducts.length === 0 && (
+            <div className="rounded border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
+              No hay productos disponibles para esta categoría.
+            </div>
+          )}
 
         {filteredProducts.length > 0 && (
           <CardGrid

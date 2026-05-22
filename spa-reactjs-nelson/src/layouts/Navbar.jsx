@@ -1,7 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { Button, Input } from "lib-components-react";
 
 import { useAuth } from "../router/providers/AuthProvider.jsx";
+import { selectCartCount } from "../store/slices/cartSlice.js";
 
 const CartIcon = () => (
   <svg
@@ -83,10 +85,34 @@ function getLinkClass(pathname, targetPath) {
   ].join(" ");
 }
 
+function getRoleLabel(role) {
+  const labels = {
+    admin: "Admin",
+    b2b: "B2B",
+    b2c: "B2C",
+  };
+
+  return labels[role] || "Usuario";
+}
+
+function getUserDisplayName(user) {
+  if (!user) return "";
+
+  return (
+    user.name ||
+    `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+    user.username ||
+    user.email ||
+    "Usuario"
+  );
+}
+
 export function Navbar({ showSearch = false }) {
   const location = useLocation();
   const navigate = useNavigate();
+
   const { user, logout } = useAuth();
+  const cartCount = useSelector(selectCartCount);
 
   const handleProfileClick = () => {
     if (user) {
@@ -95,6 +121,10 @@ export function Navbar({ showSearch = false }) {
     }
 
     navigate("/login");
+  };
+
+  const handleCartClick = () => {
+    navigate("/cart");
   };
 
   const handleLogout = () => {
@@ -156,10 +186,17 @@ export function Navbar({ showSearch = false }) {
           <Button
             type="button"
             variant="secondary"
+            onClick={handleCartClick}
             aria-label="Carrito"
-            className="!flex !h-9 !w-9 !items-center !justify-center !rounded !border-0 !bg-transparent !p-0 !text-slate-700 hover:!bg-transparent hover:!text-blue-600"
+            className="!relative !flex !h-9 !w-9 !items-center !justify-center !rounded !border-0 !bg-transparent !p-0 !text-slate-700 hover:!bg-transparent hover:!text-blue-600"
           >
             <CartIcon />
+
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
+                {cartCount}
+              </span>
+            )}
           </Button>
 
           <Button
@@ -177,8 +214,11 @@ export function Navbar({ showSearch = false }) {
             <UserIcon />
 
             {user && (
-              <span className="hidden text-sm font-medium text-slate-700 sm:inline">
-                Admin
+              <span className="hidden items-center gap-2 text-sm font-medium text-slate-700 sm:inline-flex">
+                <span>{getUserDisplayName(user)}</span>
+                <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-700">
+                  {getRoleLabel(user.role)}
+                </span>
               </span>
             )}
           </Button>

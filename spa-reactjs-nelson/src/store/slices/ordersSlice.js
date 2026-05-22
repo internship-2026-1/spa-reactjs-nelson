@@ -4,10 +4,11 @@ import { apiService } from "../../services/index.js";
 
 const initialState = {
   items: [],
+  currentOrder: null,
   loading: false,
-  updating: false,
+  creating: false,
+  paying: false,
   error: null,
-  updateError: null,
   message: "",
 };
 
@@ -60,15 +61,62 @@ export const fetchOrders = createAsyncThunk(
   }
 );
 
+export const createOrder = createAsyncThunk(
+  "orders/createOrder",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await apiService.post("/core/api/v1/orders/", payload);
+
+      if (!response?.success) {
+        return rejectWithValue(
+          response?.message || "No se pudo crear la orden."
+        );
+      }
+
+      return normalizeOrder(response.data);
+    } catch (error) {
+      return rejectWithValue(
+        error?.data?.message ||
+          error?.message ||
+          "Error de conexión al crear orden."
+      );
+    }
+  }
+);
+
+export const payOrder = createAsyncThunk(
+  "orders/payOrder",
+  async (orderId, { rejectWithValue }) => {
+    try {
+      const response = await apiService.post(
+        `/core/api/v1/orders/${orderId}/pay/`,
+        {}
+      );
+
+      if (!response?.success) {
+        return rejectWithValue(
+          response?.message || "No se pudo simular el pago."
+        );
+      }
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.data?.message ||
+          error?.message ||
+          "Error de conexión al simular pago."
+      );
+    }
+  }
+);
+
 export const updateOrderStatus = createAsyncThunk(
   "orders/updateOrderStatus",
   async ({ id, status }, { rejectWithValue }) => {
     try {
       const response = await apiService.patch(
         `/core/api/v1/orders/${id}/status/`,
-        {
-          status,
-        }
+        { status }
       );
 
       if (!response?.success) {
@@ -94,7 +142,10 @@ const ordersSlice = createSlice({
   reducers: {
     clearOrdersError: (state) => {
       state.error = null;
-      state.updateError = null;
+    },
+
+    clearCurrentOrder: (state) => {
+      state.currentOrder = null;
     },
   },
   extraReducers: (builder) => {
@@ -116,17 +167,61 @@ const ordersSlice = createSlice({
         state.message = "Error al obtener pedidos.";
       })
 
+      .addCase(createOrder.pending, (state) => {
+        state.creating = true;
+        state.error = null;
+        state.message = "Creando orden...";
+      })
+      .addCase(createOrder.fulfilled, (state, action) => {
+        state.creating = false;
+        state.currentOrder = action.payload;
+        state.items.unshift(action.payload);
+        state.error = null;
+        state.message = "Orden creada correctamente.";
+      })
+      .addCase(createOrder.rejected, (state, action) => {
+        state.creating = false;
+        state.error = action.payload || "Error al crear orden.";
+      })
+
+      .addCase(payOrder.pending, (state) => {
+        state.paying = true;
+        state.error = null;
+        state.message = "Procesando pago...";
+      })
+      .addCase(payOrder.fulfilled, (state, action) => {
+        state.paying = false;
+        state.message =
+          action.payload?.message || "Pago simulado correctamente.";
+
+        if (state.currentOrder) {
+          state.currentOrder.status = "paid";
+        }
+
+        const orderId = action.payload?.order_id;
+
+        if (orderId) {
+          const order = state.items.find((item) => item.id === orderId);
+
+          if (order) {
+            order.status = "paid";
+          }
+        }
+      })
+      .addCase(payOrder.rejected, (state, action) => {
+        state.paying = false;
+        state.error = action.payload || "Error al procesar pago.";
+      })
+
       .addCase(updateOrderStatus.pending, (state) => {
-        state.updating = true;
-        state.updateError = null;
+        state.loading = true;
+        state.error = null;
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
-        state.updating = false;
-        state.updateError = null;
-        state.message = "Pedido actualizado correctamente.";
+        state.loading = false;
 
         const index = state.items.findIndex(
-          (item) => String(item.id) === String(action.payload.id)
+          (order) => order.id === action.payload.id
         );
 
         if (index >= 0) {
@@ -134,20 +229,21 @@ const ordersSlice = createSlice({
         }
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
-        state.updating = false;
-        state.updateError = action.payload || "Error al actualizar pedido.";
+        state.loading = false;
+        state.error = action.payload || "Error al actualizar pedido.";
       });
   },
 });
 
-export const { clearOrdersError } = ordersSlice.actions;
+export const { clearOrdersError, clearCurrentOrder } = ordersSlice.actions;
 
 export const selectAllOrders = (state) => state.orders.items;
 export const selectOrdersLoading = (state) => state.orders.loading;
-export const selectOrdersUpdating = (state) => state.orders.updating;
+export const selectOrdersCreating = (state) => state.orders.creating;
+export const selectOrdersPaying = (state) => state.orders.paying;
 export const selectOrdersError = (state) => state.orders.error;
-export const selectOrdersUpdateError = (state) => state.orders.updateError;
 export const selectOrdersMessage = (state) => state.orders.message;
+export const selectCurrentOrder = (state) => state.orders.currentOrder;
 
 export const selectMyOrders = (email) => (state) =>
   state.orders.items.filter((order) => order.customer_email === email);

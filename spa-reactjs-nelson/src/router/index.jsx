@@ -8,6 +8,9 @@ import Register from "../modules/public/register";
 import NotFound from "../modules/public/not-found";
 import PasswordResetRequest from "../modules/public/password-reset/request";
 import PasswordResetConfirm from "../modules/public/password-reset/confirm";
+import Cart from "../modules/public/cart";
+import Checkout from "../modules/public/checkout";
+import CheckoutSuccess from "../modules/public/checkout/success";
 
 import Dashboard from "../modules/private/dashboard";
 import Products from "../modules/private/products";
@@ -29,6 +32,9 @@ export function AppRouter() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<PasswordResetRequest />} />
         <Route path="/new-password" element={<PasswordResetConfirm />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/checkout/success" element={<CheckoutSuccess />} />
         <Route path="*" element={<NotFound />} />
       </Route>
 
