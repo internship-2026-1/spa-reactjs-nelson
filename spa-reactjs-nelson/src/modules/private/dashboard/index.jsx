@@ -1,17 +1,39 @@
-// src/modules/private/dashboard/index.jsx
-
 import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Table } from "lib-components-react";
 
 import { useAuth } from "../../../router/providers/AuthProvider.jsx";
+
 import {
   fetchProducts,
   selectProducts,
-  selectProductsError,
-  selectProductsLoading,
 } from "../../../store/slices/productsSlice.js";
+
+import {
+  fetchCategories,
+  selectCategories,
+} from "../../../store/slices/categoriesSlice.js";
+
+import {
+  fetchOrders,
+  selectAllOrders,
+  selectOrdersError,
+  selectOrdersLoading,
+} from "../../../store/slices/ordersSlice.js";
+
+const mockUsersCount = 3;
+
+const STATUS_LABELS = {
+  pending: "Pendiente",
+  paid: "Pagado",
+  cancelled: "Cancelado",
+};
+
+const STATUS_COLORS = {
+  pending: "bg-orange-50 text-orange-700",
+  paid: "bg-green-50 text-green-700",
+  cancelled: "bg-red-50 text-red-700",
+};
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("es-GT", {
@@ -20,19 +42,15 @@ function formatCurrency(value) {
   }).format(Number(value || 0));
 }
 
-function StatusBadge({ stock }) {
-  const isAvailable = stock > 0;
-
+function StatusBadge({ status }) {
   return (
     <span
       className={[
         "inline-flex rounded-full px-3 py-1 text-xs font-bold",
-        isAvailable
-          ? "bg-green-50 text-green-700"
-          : "bg-red-50 text-red-700",
+        STATUS_COLORS[status] || "bg-slate-100 text-slate-600",
       ].join(" ")}
     >
-      {isAvailable ? "Activo" : "Agotado"}
+      {STATUS_LABELS[status] || status}
     </span>
   );
 }
@@ -42,142 +60,90 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   const products = useSelector(selectProducts);
-  const loading = useSelector(selectProductsLoading);
-  const error = useSelector(selectProductsError);
+  const categories = useSelector(selectCategories);
+  const orders = useSelector(selectAllOrders);
+  const ordersLoading = useSelector(selectOrdersLoading);
+  const ordersError = useSelector(selectOrdersError);
 
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchCategories());
+    dispatch(fetchOrders());
   }, [dispatch]);
 
-  const stats = useMemo(() => {
-    const totalProducts = products.length;
-    const availableStock = products.reduce(
-      (total, product) => total + Number(product.stock || 0),
-      0
-    );
-    const inventoryValue = products.reduce(
-      (total, product) =>
-        total + Number(product.price || 0) * Number(product.stock || 0),
-      0
-    );
-    const outOfStock = products.filter((product) => product.stock <= 0).length;
+  const recentOrders = useMemo(() => {
+    return [...orders]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5);
+  }, [orders]);
 
-    return [
-      {
-        label: "Productos",
-        value: totalProducts,
-        sub: "en catálogo",
-        path: "/productos",
-        color: "border-blue-600",
-      },
-      {
-        label: "Stock disponible",
-        value: availableStock,
-        sub: "unidades",
-        path: "/productos",
-        color: "border-green-600",
-      },
-      {
-        label: "Sin stock",
-        value: outOfStock,
-        sub: "productos agotados",
-        path: "/productos",
-        color: "border-red-600",
-      },
-      {
-        label: "Valor inventario",
-        value: formatCurrency(inventoryValue),
-        sub: "estimado",
-        path: "/productos",
-        color: "border-orange-500",
-      },
-    ];
-  }, [products]);
-
-  const columns = [
+  const stats = [
     {
-      key: "name",
-      header: "PRODUCTO",
-      render: (row) => (
-        <div>
-          <p className="font-medium text-slate-900">{row.name}</p>
-          <p className="text-xs text-slate-400">{row.description}</p>
-        </div>
-      ),
+      label: "Productos",
+      value: products.length,
+      sub: "en catálogo",
+      path: "/productos",
+      mod: "border-blue-600",
     },
     {
-      key: "category",
-      header: "CATEGORÍA",
-      render: (row) => (
-        <span className="rounded bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">
-          {row.category}
-        </span>
-      ),
+      label: "Categorías",
+      value: categories.length,
+      sub: "registradas",
+      path: "/categorias",
+      mod: "border-purple-600",
     },
     {
-      key: "reference",
-      header: "REFERENCIA",
-      render: (row) => (
-        <span className="font-mono text-xs text-slate-500">
-          {row.reference}
-        </span>
-      ),
+      label: "Pedidos",
+      value: orders.length,
+      sub: "en total",
+      path: "/pedidos",
+      mod: "border-orange-500",
     },
     {
-      key: "stock",
-      header: "STOCK",
-    },
-    {
-      key: "price",
-      header: "PRECIO",
-      render: (row) => formatCurrency(row.price),
-    },
-    {
-      key: "status",
-      header: "ESTADO",
-      render: (row) => <StatusBadge stock={row.stock} />,
+      label: "Usuarios",
+      value: mockUsersCount,
+      sub: "registrados",
+      path: "/usuarios",
+      mod: "border-green-600",
     },
   ];
 
   return (
     <section className="mx-auto max-w-[1180px]">
       <header className="mb-8 border-b border-slate-200 pb-6">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
-          Panel principal
-        </p>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+            Panel principal
+          </p>
 
-        <h1 className="mt-2 text-4xl font-extrabold tracking-[-0.05em] text-slate-950">
-          Bienvenido, {user?.name || user?.email || "Admin"}
-        </h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-slate-950">
+            Bienvenido, {user?.name || user?.email}
+          </h1>
 
-        <p className="mt-2 text-sm text-slate-500">
-          Resumen general del inventario y productos disponibles.
-        </p>
-      </header>
-
-      {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-          {error}
+          <p className="mt-2 text-sm text-slate-500">
+            Resumen general de la plataforma.
+          </p>
         </div>
-      )}
+      </header>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Link
-            key={stat.label}
+            key={stat.path}
             to={stat.path}
             className={[
-              "rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
-              "border-l-4",
-              stat.color,
+              "rounded-lg border border-slate-200 border-l-4 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+              stat.mod,
             ].join(" ")}
           >
             <span className="block text-3xl font-bold tracking-[-0.04em] text-slate-950">
               {stat.value}
             </span>
+
             <span className="mt-3 block text-sm font-semibold text-slate-900">
               {stat.label}
             </span>
+
             <span className="mt-1 block text-xs text-slate-500">
               {stat.sub}
             </span>
@@ -187,50 +153,84 @@ export default function Dashboard() {
 
       <section className="mt-10 overflow-hidden rounded-lg border border-slate-300 bg-white">
         <div className="flex items-center justify-between border-b border-slate-300 px-6 py-5">
-          <div>
-            <h2 className="text-lg font-medium text-slate-900">
-              Gestión de Inventario
-            </h2>
-            <p className="mt-1 text-xs text-slate-400">
-              Productos obtenidos desde el backend.
-            </p>
-          </div>
+          <h2 className="text-lg font-medium text-slate-900">
+            Pedidos recientes
+          </h2>
 
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => dispatch(fetchProducts())}
-              disabled={loading}
-              className="!h-10 !rounded-md !border !border-slate-300 !bg-white !px-4 !text-sm !font-medium !normal-case !text-slate-700"
-            >
-              {loading ? "Actualizando..." : "Actualizar"}
-            </Button>
-
-            <Link to="/productos">
-              <Button
-                type="button"
-                variant="primary"
-                className="!h-10 !rounded-md !px-4 !text-sm !font-medium !normal-case"
-              >
-                Ver productos
-              </Button>
-            </Link>
-          </div>
+          <Link
+            to="/pedidos"
+            className="text-sm font-medium text-blue-600 hover:underline"
+          >
+            Ver todos
+          </Link>
         </div>
 
-        {loading ? (
+        {ordersError && (
+          <div className="border-b border-red-200 bg-red-50 px-6 py-3 text-sm font-medium text-red-600">
+            {ordersError}
+          </div>
+        )}
+
+        {ordersLoading ? (
           <div className="px-6 py-10 text-sm text-slate-500">
-            Cargando productos...
+            Cargando pedidos...
           </div>
         ) : (
-          <Table
-            data={products.slice(0, 5)}
-            columns={columns}
-            keyField="id"
-            itemsPerPage={5}
-            emptyMessage="No hay productos disponibles."
-          />
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-6 py-4"># Pedido</th>
+                  <th className="px-6 py-4">Cliente</th>
+                  <th className="px-6 py-4">Fecha</th>
+                  <th className="px-6 py-4">Ítems</th>
+                  <th className="px-6 py-4">Total</th>
+                  <th className="px-6 py-4">Estado</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-slate-200">
+                {recentOrders.map((order) => (
+                  <tr key={order.id} className="bg-white">
+                    <td className="px-6 py-4 font-mono text-xs font-semibold text-blue-600">
+                      {String(order.id).slice(0, 8)}
+                    </td>
+
+                    <td className="px-6 py-4 text-slate-700">
+                      {order.customer}
+                    </td>
+
+                    <td className="px-6 py-4 text-slate-500">
+                      {order.date || "Sin fecha"}
+                    </td>
+
+                    <td className="px-6 py-4 text-slate-700">
+                      {order.itemsCount}
+                    </td>
+
+                    <td className="px-6 py-4 font-medium text-slate-900">
+                      {formatCurrency(order.total)}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <StatusBadge status={order.status} />
+                    </td>
+                  </tr>
+                ))}
+
+                {recentOrders.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="px-6 py-10 text-center text-sm text-slate-500"
+                    >
+                      No hay pedidos registrados.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </section>

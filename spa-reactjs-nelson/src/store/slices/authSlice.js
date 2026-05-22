@@ -37,19 +37,20 @@ export const loginUser = createAsyncThunk(
 
       const accessToken = response?.data?.access;
       const refreshToken = response?.data?.refresh;
+      const user = response?.data?.user;
 
       if (!accessToken) {
         return rejectWithValue("El backend no devolvió access token.");
       }
 
+      if (!user) {
+        return rejectWithValue("El backend no devolvió información del usuario.");
+      }
+
       return {
         accessToken,
         refreshToken,
-        user: {
-          email,
-          name: email === "admin@techspec.com" ? "Admin" : email.split("@")[0],
-          role: email === "admin@techspec.com" ? "admin" : "user",
-        },
+        user,
       };
     } catch (error) {
       return rejectWithValue(

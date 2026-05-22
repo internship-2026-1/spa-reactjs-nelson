@@ -3,6 +3,10 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { apiService } from "../../services/index.js";
 
 const initialState = {
+  items: [],
+  listLoading: false,
+  listError: null,
+
   registerLoading: false,
   registerError: null,
   registerSuccess: null,
@@ -31,6 +35,50 @@ function getErrorMessage(error, fallback) {
 function getErrorData(error) {
   return error?.data?.data || null;
 }
+
+function normalizeUser(user) {
+  return {
+    id: user.id,
+    username: user.username || "",
+    name:
+      user.name ||
+      `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+      user.username ||
+      user.email,
+    email: user.email || "",
+    phone: user.phone || "",
+    role: user.role || "b2c",
+    status: user.status || (user.is_active ? "Activo" : "Inactivo"),
+    createdAt: user.created_at
+      ? new Date(user.created_at).toISOString().slice(0, 10)
+      : "",
+  };
+}
+
+export const fetchUsers = createAsyncThunk(
+  "users/fetchUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiService.get("/user/api/v1/users/");
+
+      if (!response?.success) {
+        return rejectWithValue(
+          response?.message || "No se pudieron obtener los usuarios."
+        );
+      }
+
+      return Array.isArray(response.data)
+        ? response.data.map(normalizeUser)
+        : [];
+    } catch (error) {
+      return rejectWithValue(
+        error?.data?.message ||
+          error?.message ||
+          "Error de conexión al obtener usuarios."
+      );
+    }
+  }
+);
 
 export const registerUser = createAsyncThunk(
   "users/registerUser",
@@ -121,6 +169,10 @@ const usersSlice = createSlice({
   name: "users",
   initialState,
   reducers: {
+    clearUsersError: (state) => {
+      state.listError = null;
+    },
+
     clearRegisterState: (state) => {
       state.registerError = null;
       state.registerSuccess = null;
@@ -135,6 +187,20 @@ const usersSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchUsers.pending, (state) => {
+        state.listLoading = true;
+        state.listError = null;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.listLoading = false;
+        state.items = action.payload;
+        state.listError = null;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.listLoading = false;
+        state.listError = action.payload || "Error al obtener usuarios.";
+      })
+
       .addCase(registerUser.pending, (state) => {
         state.registerLoading = true;
         state.registerError = null;
@@ -193,8 +259,15 @@ const usersSlice = createSlice({
   },
 });
 
-export const { clearRegisterState, clearPasswordResetState } =
-  usersSlice.actions;
+export const {
+  clearUsersError,
+  clearRegisterState,
+  clearPasswordResetState,
+} = usersSlice.actions;
+
+export const selectUsers = (state) => state.users.items;
+export const selectUsersLoading = (state) => state.users.listLoading;
+export const selectUsersError = (state) => state.users.listError;
 
 export const selectRegisterLoading = (state) => state.users.registerLoading;
 export const selectRegisterError = (state) => state.users.registerError;

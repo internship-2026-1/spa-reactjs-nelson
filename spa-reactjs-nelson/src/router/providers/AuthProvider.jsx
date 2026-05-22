@@ -9,6 +9,19 @@ import {
 
 const AuthContext = createContext(null);
 
+const menusByRole = {
+  admin: [
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Productos", path: "/productos" },
+    { name: "Categorías", path: "/categorias" },
+    { name: "Pedidos", path: "/pedidos" },
+    { name: "Usuarios", path: "/usuarios" },
+    { name: "Integración", path: "/integracion" },
+  ],
+  b2c: [{ name: "Mis pedidos", path: "/orders" }],
+  b2b: [{ name: "Mis pedidos", path: "/orders" }],
+};
+
 export function AuthProvider({ children }) {
   const dispatch = useDispatch();
   const auth = useSelector(selectAuth);
@@ -27,11 +40,16 @@ export function AuthProvider({ children }) {
     dispatch(logoutSession());
   };
 
+  const role = auth.user?.role || null;
+  const menu = role ? menusByRole[role] || menusByRole.b2c : null;
+
   const value = useMemo(
     () => ({
       user: auth.user,
       token: auth.accessToken,
       refreshToken: auth.refreshToken,
+      role,
+      menu,
       isAuthenticated: auth.isAuthenticated,
       isAuthReady: auth.isAuthReady,
       loading: auth.loading,
@@ -39,7 +57,7 @@ export function AuthProvider({ children }) {
       login,
       logout,
     }),
-    [auth]
+    [auth, role, menu]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

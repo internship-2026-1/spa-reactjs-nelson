@@ -105,7 +105,21 @@ export default function Login() {
         }),
       ).unwrap();
 
-      navigate(from, { replace: true });
+      const result = await dispatch(
+        loginUser({
+          email,
+          password,
+        }),
+      ).unwrap();
+
+      const role = result?.user?.role;
+
+      if (role === "admin") {
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      navigate("/orders", { replace: true });
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
     }

@@ -3,21 +3,6 @@ import { Button } from "lib-components-react";
 
 import { useAuth } from "../router/providers/AuthProvider.jsx";
 
-const adminMenu = [
-  {
-    name: "Dashboard",
-    path: "/dashboard",
-  },
-  {
-    name: "Productos",
-    path: "/productos",
-  },
-  {
-    name: "Perfil",
-    path: "/perfil",
-  },
-];
-
 function getLinkClass(pathname, path) {
   const isActive = pathname === path;
 
@@ -29,10 +14,20 @@ function getLinkClass(pathname, path) {
   ].join(" ");
 }
 
+function getRoleLabel(role) {
+  const labels = {
+    admin: "Administrador",
+    b2b: "Cliente B2B",
+    b2c: "Cliente B2C",
+  };
+
+  return labels[role] || "Usuario";
+}
+
 export function AdminNavbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, menu, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -46,7 +41,7 @@ export function AdminNavbar() {
     >
       <div className="mx-auto flex h-[60px] max-w-[1180px] items-center gap-4 px-6">
         <Link
-          to="/dashboard"
+          to={user?.role === "admin" ? "/dashboard" : "/orders"}
           className="mr-4 whitespace-nowrap text-[15px] font-extrabold tracking-[-0.02em] text-slate-950"
         >
           TECHSPEC Admin
@@ -56,7 +51,7 @@ export function AdminNavbar() {
           aria-label="Navegación administrativa"
           className="hidden items-center gap-1 md:flex"
         >
-          {adminMenu.map((item) => (
+          {menu?.map((item) => (
             <Link
               key={item.path}
               to={item.path}
@@ -69,9 +64,14 @@ export function AdminNavbar() {
 
         <div className="ml-auto flex items-center gap-3">
           {user && (
-            <span className="hidden text-sm text-slate-500 sm:inline">
-              {user.name || user.email || "Admin"}
-            </span>
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-medium text-slate-700">
+                {user.name || user.email}
+              </p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-600">
+                {getRoleLabel(user.role)}
+              </p>
+            </div>
           )}
 
           <Button
